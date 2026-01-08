@@ -21,6 +21,12 @@ Based on [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://ww
 - **SSD-safe**: No wear leveling issues
 - **Universal**: Works on all storage types
 
+## Core Principles
+
+- **Keep it simple**: POSIX-compliant, minimal dependencies
+- **Security first**: Focus on correct implementation of BSI method
+- **No bloat**: Reject features that don't serve core mission
+
 ## Installation
 
 ```bash
@@ -28,7 +34,11 @@ Based on [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://ww
 sudo apt-get install build-essential libssl-dev cmake  # Debian/Ubuntu
 # or: brew install openssl cmake  # macOS
 
-# Build
+# Build and install (using Makefile)
+make
+sudo make install
+
+# Or manually with CMake
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 sudo cmake --install build

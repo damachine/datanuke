@@ -22,17 +22,20 @@ void print_usage(const char *program_name) {
     printf("Usage: %s <file|device>\n\n", program_name);
     printf("Description:\n");
     printf("  Encrypts files or entire block devices with AES-256-CBC.\n");
-    printf("  After encryption, the key is securely destroyed.\n\n");
+    printf("  The encryption key is displayed once, then securely destroyed.\n");
+    printf("  After encryption, the file/device is gibberish - worthless without the key.\n\n");
     printf("Examples:\n");
     printf("  %s secret.txt              # Encrypt file\n", program_name);
     printf("  %s /dev/sdb                # Encrypt entire drive (requires root)\n", program_name);
     printf("  %s /dev/sdb1               # Encrypt partition\n\n", program_name);
+    printf("To complete secure deletion:\n");
+    printf("  1. Remove the encrypted file with normal methods (rm).\n");
+    printf("  2. Forget the key if you don't need the data.\n");
+    printf("  You can safely format, delete, reuse, or physically destroy the file/device.\n\n");
     printf("WARNING FOR DEVICES:\n");
     printf("  - Cannot encrypt mounted devices (umount first)\n");
     printf("  - Cannot encrypt device with running OS (use live system)\n");
-    printf("  - This DESTROYS all data on the device permanently!\n\n");
-    printf("WARNING: This tool permanently destroys data!\n");
-    printf("         Make backups before use!\n");
+    printf("  - This DESTROYS all data permanently if you don't save the key!\n");
 }
 
 /**
@@ -52,6 +55,12 @@ int main(int argc, char *argv[]) {
     if (argc != 2) {
         print_usage(argv[0]);
         return 1;
+    }
+
+    // Check for help flags
+    if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "help") == 0) {
+        print_usage(argv[0]);
+        return 0;
     }
 
     char *target_file = argv[1];

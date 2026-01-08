@@ -35,14 +35,20 @@ cmake --build .
 ### crypto.c
 
 - `crypto_init()` - Initialize context, generate random key/IV
-- `crypto_encrypt_file()` - AES-256-CBC encryption (EVP API)
-- `crypto_display_key()` - TUI key display with 3-second countdown
+- `crypto_encrypt_file()` - AES-256-CBC file encryption (EVP API)
+- `crypto_encrypt_device()` - AES-256-CBC block device encryption
+- `crypto_display_key()` - Display key once (POSIX-style plain text)
 - `crypto_secure_wipe_key()` - 7-pass Gutmann key wipe
 - `crypto_cleanup()` - Free OpenSSL context
 
 ### main.c
 
-- Parse args → encrypt file → display key → wipe key → done
+- Parse args (including --help/-h/help flags)
+- Check if target is file or block device
+- Encrypt file/device with AES-256-CBC
+- Display key once (plain text, no countdown)
+- Wipe key from memory (7-pass Gutmann)
+- Output: POSIX-compliant, no ANSI colors
 
 ### platform.c
 
@@ -51,13 +57,16 @@ cmake --build .
 
 ## Key Security
 
-**Key Lifecycle:**
+**Key Lifecycle (Encrypt-then-Delete-Key Method):**
 1. Generated with `RAND_bytes()` (CSPRNG)
 2. Locked in RAM with `mlock()` (no swap)
-3. Used for encryption
-4. Displayed for 3 seconds (TUI)
-5. Wiped with 7-pass Gutmann
-6. Memory unlocked
+3. Used for encryption (file or device)
+4. Displayed once (plain text, save now or lose forever)
+5. 3-second pause for user to save key
+6. Wiped with 7-pass Gutmann
+7. Memory unlocked
+
+Without the key, encrypted data is permanently irrecoverable (BSI method).
 
 **Gutmann Wipe:**
 - Pass 1: 0x00
@@ -66,23 +75,40 @@ cmake --build .
 - Pass 4: 0x00
 - Passes 5-7: volatile pointer overwrite
 
-## TUI Implementation
+## POSIX-Style Output
 
-**ANSI Codes:**
-- Bold: `\033[1m`
-- Cyan: `\033[1;36m`
-- Yellow: `\033[1;33m`
-- Reverse: `\033[7m`
-- Reset: `\033[0m`
+**Design Principles:**
+- No ANSI escape codes (no colors)
+- No Unicode box-drawing characters
+- No emojis or fancy formatting
+- Plain text output only
+- Compatible with all POSIX terminals
 
-**Countdown:**
+**Key Display:**
 ```c
-for (int i = 3; i > 0; i--) {
-    printf("\rWiping key in %d...", i);
-    fflush(stdout);
-    sleep(1);
-}
+printf("---\n");
+printf("ENCRYPTION KEY - SAVE NOW OR LOSE FOREVER\n\n");
+printf("Key: %s\n", key_hex);
+printf("IV:  %s\n\n", iv_hex);
+printf("Key is stored in RAM only and will be wiped immediately.\n");
+printf("Write it down now if you need to decrypt later.\n");
+printf("---\n");
+sleep(3);  // Silent pause, no countdown
 ```
+
+## Device Support
+
+**Block Device Encryption:**
+- Detects devices with `platform_is_device()`
+- Gets device size with `platform_get_device_size()`
+- Requires "YES" confirmation before encryption
+- Cannot encrypt mounted devices
+- Cannot encrypt device with running OS
+
+**Supported Devices:**
+- `/dev/sdb`, `/dev/sdc`, etc. (entire drives)
+- `/dev/sdb1`, `/dev/sdb2`, etc. (partitions)
+- `/dev/nvme0n1`, `/dev/nvme0n1p1` (NVMe drives)
 
 ## Contributing
 
@@ -90,7 +116,8 @@ for (int i = 3; i > 0; i--) {
 2. Create feature branch
 3. Make changes
 4. Test with: `./build/datanuke test.txt`
-5. Submit PR
+5. Test device mode (requires root): `sudo ./build/datanuke /dev/loop0`
+6. Submit PR
 
 ## Testing
 

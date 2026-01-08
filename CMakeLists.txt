@@ -88,5 +88,6 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(datanuke pthread)
 endif()
 
-# Installation
+# Installation to /usr/bin
+set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install prefix" FORCE)
 install(TARGETS datanuke DESTINATION bin)
