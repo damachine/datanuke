@@ -1,0 +1,2 @@
+# disknuke
+Makes data powerless
