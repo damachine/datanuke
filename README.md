@@ -6,19 +6,6 @@
 Encrypt  →  Trash  →  Gone          
 ```
 
-**How it works:**
-```
-File: "Sensitive Data..."
-  ↓ AES-256-CBC encryption with random key
-File: 0x7a3f89c2... (encrypted)
-  ↓ Display key on screen
-Key: [user can save it]
-  ↓ 7-pass Gutmann wipe
-Key: [destroyed from RAM]
-  ↓ Normal file deletion
-Result: Encrypted file, no key = data is powerless
-```
-
 BSI-compliant secure data deletion through encryption and key destruction.
 
 **Cross-platform:** Linux, macOS, Windows, BSD.
@@ -39,9 +26,9 @@ BSI-compliant secure data deletion through encryption and key destruction.
 
 ## What It Does
 
-**Implements the BSI method: "Daten verschlüsseln und Schlüssel wegwerfen"** (Encrypt data and throw away the key)
+**Implements the BSI method: "Daten verschlüsseln und Schlüssel wegwerfen" - Encrypt data and throw away the key**
 
-Encrypts files or entire devices in-place with AES-256-CBC, displays the encryption key once, then permanently wipes the key from RAM. Without the key, the encrypted data is permanently irrecoverable.
+Encrypts files or entire devices in-place with AES-256-CBC, displays the encryption key once, then permanently wipes the key from RAM. Without the key, the encrypted data is permanently irrecoverable!
 
 Based on [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://www.bsi.bund.de/DE/Themen/Verbraucherinnen-und-Verbraucher/Informationen-und-Empfehlungen/Cyber-Sicherheitsempfehlungen/Daten-sichern-verschluesseln-und-loeschen/Daten-endgueltig-loeschen/daten-endgueltig-loeschen_node.html) recommendations: **"Encrypt-then-Delete-Key"** (BSI CON.6).
 
