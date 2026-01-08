@@ -166,59 +166,25 @@ void crypto_display_key(const crypto_context_t *ctx) {
     if (!ctx)
         return;
 
-    // ANSI color codes for rich terminal UI
-    const char *BOLD = "\033[1m";      // Bold
-    const char *REVERSE = "\033[7m";   // Reverse video (swap fg/bg)
-    const char *YELLOW = "\033[1;33m"; // Bright yellow
-    const char *CYAN = "\033[1;36m";   // Bright cyan
-    const char *RESET = "\033[0m";     // Reset all attributes
-
+    printf("---\n");
+    printf("ENCRYPTION KEY - SAVE NOW OR LOSE FOREVER\n");
     printf("\n");
-
-    // Title bar with reverse video (white on black)
-    printf("%s%s", BOLD, REVERSE);
-    printf("╔═══════════════════════════════════════════════════════════════════╗\n");
-    printf("║               🔐  ENCRYPTION KEY - SAVE NOW OR LOSE FOREVER  🔐              ║\n");
-    printf("╚═══════════════════════════════════════════════════════════════════╝\n");
-    printf("%s", RESET);
-
-    printf("\n");
-
-    // Key section with cyan color
-    printf("%s%s╔═══════════════════════════════════════════════════════════════════╗%s\n", BOLD, CYAN, RESET);
-    printf("%s%s║%s  %sKey:%s ", BOLD, CYAN, RESET, YELLOW, RESET);
+    printf("Key: ");
     for (int i = 0; i < AES_KEY_SIZE; i++) {
-        printf("%s%02x%s", YELLOW, ctx->key[i], RESET);
+        printf("%02x", ctx->key[i]);
     }
-    printf("  %s%s║%s\n", BOLD, CYAN, RESET);
-
-    printf("%s%s║%s  %sIV:%s  ", BOLD, CYAN, RESET, YELLOW, RESET);
+    printf("\n");
+    printf("IV:  ");
     for (int i = 0; i < AES_BLOCK_SIZE; i++) {
-        printf("%s%02x%s", YELLOW, ctx->iv[i], RESET);
+        printf("%02x", ctx->iv[i]);
     }
-    printf("                                  %s%s║%s\n", BOLD, CYAN, RESET);
-    printf("%s%s╚═══════════════════════════════════════════════════════════════════╝%s\n", BOLD, CYAN, RESET);
-
     printf("\n");
-
-    // Info section with blue/cyan styling
-    printf("%s%s", BOLD, CYAN);
-    printf("╔═══════════════════════════════════════════════════════════════════╗\n");
-    printf("║  ℹ️  Key is stored in RAM only and will be wiped immediately     ║\n");
-    printf("║  ℹ️  Write it down now if you need to decrypt the file later     ║\n");
-    printf("╚═══════════════════════════════════════════════════════════════════╝\n");
-    printf("%s", RESET);
-
     printf("\n");
+    printf("Key is stored in RAM only and will be wiped immediately.\n");
+    printf("Write it down now if you need to decrypt later. (both hex values below)\n");
+    printf("---\n");
 
-    // Countdown with sleep (shorter, calmer)
-    for (int i = 3; i > 0; i--) {
-        printf("\r%s%sWiping key in %d...%s", BOLD, CYAN, i, RESET);
-        fflush(stdout);
-        sleep(1);
-    }
-    printf("\r%s                            %s\r", BOLD, RESET); // Clear countdown line
-    fflush(stdout);
+    sleep(3);
 }
 
 /**
@@ -363,9 +329,7 @@ int crypto_encrypt_device(const char *device_path, crypto_context_t *ctx) {
     size_t bytes_read;
 
     printf("\n");
-    printf("\033[1;36m╔═══════════════════════════════════════════════════════════════════╗\033[0m\n");
-    printf("\033[1;36m║                     ENCRYPTING DEVICE...                         ║\033[0m\n");
-    printf("\033[1;36m╚═══════════════════════════════════════════════════════════════════╝\033[0m\n");
+    printf("Encrypting device...\n");
     printf("\n");
 
     // Read, encrypt, and write back in chunks
@@ -403,7 +367,7 @@ int crypto_encrypt_device(const char *device_path, crypto_context_t *ctx) {
         double gb_processed = processed / (1024.0 * 1024.0 * 1024.0);
         double gb_total = device_size / (1024.0 * 1024.0 * 1024.0);
 
-        printf("\r\033[1;36mProgress: %.2f GB / %.2f GB (%.1f%%)  \033[0m", gb_processed, gb_total, percent);
+        printf("\rProgress: %.2f GB / %.2f GB (%.1f%%)  ", gb_processed, gb_total, percent);
         fflush(stdout);
     }
 

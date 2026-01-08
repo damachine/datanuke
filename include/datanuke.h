@@ -123,36 +123,6 @@ void crypto_cleanup(crypto_context_t *ctx);
 /** @} */ // end of Crypto
 
 /**
- * @defgroup SecureDelete Secure Deletion Functions
- * @brief Multi-pass overwrite and secure file/device deletion
- * @{
- */
-
-/**
- * @brief Securely delete a file using multi-pass overwrite
- * @param path Path to file to delete
- * @return DATANUKE_SUCCESS, DATANUKE_ERROR_IO, or DATANUKE_ERROR_CRYPTO
- */
-int secure_delete_file(const char *path);
-
-/**
- * @brief Securely overwrite and delete entire device/partition
- * @param device_path Path to device (e.g., /dev/sdb, \\\\.\\PhysicalDrive1)
- * @return DATANUKE_SUCCESS, DATANUKE_ERROR_IO, or DATANUKE_ERROR_CRYPTO
- */
-int secure_delete_device(const char *device_path);
-
-/**
- * @brief Perform multi-pass overwrite on file or device
- * @param path Path to file or device
- * @param passes Number of overwrite passes
- * @return DATANUKE_SUCCESS, DATANUKE_ERROR_IO, or DATANUKE_ERROR_CRYPTO
- */
-int secure_overwrite(const char *path, size_t passes);
-
-/** @} */ // end of SecureDelete
-
-/**
  * @defgroup Platform Platform-Specific Functions
  * @brief Cross-platform abstractions for device access and memory locking
  * @{

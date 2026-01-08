@@ -39,11 +39,10 @@ void print_usage(const char *program_name) {
  * @brief Main entry point for DataNuke application
  *
  * Implements the BSI-recommended "Encrypt-then-Delete-Key" method:
- * 1. Encrypt file with AES-256-CBC
- * 2. Display encryption key (for optional recovery)
- * 3. Securely wipe key from memory
- * 4. Overwrite and delete original file
- * 5. Prompt user to delete .encrypted file
+ * 1. Encrypt file/device with AES-256-CBC
+ * 2. Display encryption key once (for optional recovery)
+ * 3. Securely wipe key from memory (7-pass Gutmann)
+ * 4. Encrypted data is worthless without the key
  *
  * @param argc Number of command-line arguments
  * @param argv Array of command-line argument strings
@@ -66,15 +65,11 @@ int main(int argc, char *argv[]) {
     }
 
     printf("\n");
-    printf("╔══════════════════════════════════════════╗\n");
-    printf("║         DataNuke v%s                 ║\n", DATANUKE_VERSION);
-    printf("║      \"Makes data powerless\"             ║\n");
-    printf("║  Secure Data Deletion (BSI-compliant)   ║\n");
-    printf("╚══════════════════════════════════════════╝\n");
+    printf("DataNuke v%s - Secure Data Deletion (BSI-compliant)\n", DATANUKE_VERSION);
     printf("\n");
     printf("Target: %s\n", target_file);
     printf("Type:   %s\n", is_device ? "Block Device" : "Regular File");
-    printf("Method: Encrypt-then-Delete-Key (BSI)\n\n");
+    printf("Method: Encrypt-then-Delete-Key\n\n");
 
     if (is_device) {
         uint64_t size;
@@ -82,8 +77,8 @@ int main(int argc, char *argv[]) {
             printf("Device size: %.2f GB (%llu bytes)\n\n", size / (1024.0 * 1024.0 * 1024.0),
                    (unsigned long long)size);
         }
-        printf("\033[1;31m⚠️  WARNING: This will DESTROY all data on %s!\033[0m\n", target_file);
-        printf("Type 'YES' to confirm (uppercase): ");
+        printf("WARNING: This will DESTROY all data on %s!\n", target_file);
+        printf("Type YES to confirm: ");
         char confirm[10];
         if (fgets(confirm, sizeof(confirm), stdin) == NULL || strncmp(confirm, "YES\n", 4) != 0) {
             printf("Aborted.\n");
@@ -139,7 +134,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Display key with countdown
+    // Display key
     crypto_display_key(&ctx);
 
     // Wipe key from memory
@@ -152,23 +147,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Success summary
+    printf("OPERATION SUCCESSFUL\n");
     printf("\n");
-    printf("╔══════════════════════════════════════════════════════════════════╗\n");
-    printf("║                     ✓ OPERATION SUCCESSFUL                      ║\n");
-    printf("╠══════════════════════════════════════════════════════════════════╣\n");
-    printf("║  Target:         %s%-40s%s  ║\n", "\033[1;36m", target_file, "\033[0m");
-    printf("║  Status:         %sENCRYPTED (AES-256-CBC)%s                      ║\n", "\033[1;32m", "\033[0m");
-    printf("║  Encryption key: %sSECURELY WIPED FROM MEMORY%s                 ║\n", "\033[1;31m", "\033[0m");
-    printf("╠══════════════════════════════════════════════════════════════════╣\n");
-    if (is_device) {
-        printf("║  The device is now encrypted and permanently unrecoverable.     ║\n");
-        printf("║  You can safely format, reuse, or physically destroy it.       ║\n");
-    } else {
-        printf("║  The file content is now permanently unrecoverable.             ║\n");
-        printf("║  You can safely delete the file with normal methods.            ║\n");
-    }
-    printf("╚══════════════════════════════════════════════════════════════════╝\n");
+    printf("Target:         %s\n", target_file);
+    printf("Status:         ENCRYPTED (AES-256-CBC)\n");
+    printf("Encryption key: SECURELY WIPED FROM MEMORY\n");
+    printf("\n");
+    printf("The file/device is now encrypted and permanently unrecoverable - worthless without the key.\n");
+    printf("\n");
+    printf("To complete secure deletion process:\n");
+    printf(" 1) You can safely remove the encrypted file with normal methods.\n");
+    printf(" 2) Forget the key if you do not need to recover the data.\n");
     printf("\n");
 
     platform_unlock_memory(&ctx, sizeof(ctx));

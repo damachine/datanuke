@@ -44,7 +44,12 @@ sudo datanuke <file>
 sudo datanuke <device>
 ```
 
-**After encryption:** You can safely format, delete, reuse, or physically destroy the file/device.
+**You can safely format, delete, reuse, or physically destroy the file/device.** 
+**After encryption, the file/device is gibberish - worthless without the key.**
+
+To complete secure deletion:
+ 1. Remove the encrypted file with normal methods (rm).
+ 2. Forget the key if you don't need the data.
 
 ### Example: File Encryption
 
@@ -55,41 +60,31 @@ sudo datanuke secret.txt
 
 **Output:**
 ```
-╔══════════════════════════════════════════╗
-║         DataNuke v1.0.0                 ║
-║      "Makes data powerless"             ║
-║  Secure Data Deletion (BSI-compliant)   ║
-╚══════════════════════════════════════════╝
+DataNuke v1.0.0 - Secure Data Deletion (BSI-compliant)
 
 Target: secret.txt
-Method: Encrypt-then-Delete-Key (BSI)
+Type:   Regular File
+Method: Encrypt-then-Delete-Key
+---
+ENCRYPTION KEY - SAVE NOW OR LOSE FOREVER
 
-╔═══════════════════════════════════════════════════════════════════╗
-║               🔐  ENCRYPTION KEY - SAVE NOW OR LOSE FOREVER  🔐              ║
-╚═══════════════════════════════════════════════════════════════════╝
+Key: 7ee6c8b5eb89d025e79fb6990d1ea0f78cbe9dd7070159023e94a39a68c399e6
+IV:  0486802bd91a4596272e8051ceb42bd5
 
-╔═══════════════════════════════════════════════════════════════════╗
-║  Key: a1b2c3d4...  (64 hex chars)                                  ║
-║  IV:  1a2b3c4d...  (32 hex chars)                                  ║
-╚═══════════════════════════════════════════════════════════════════╝
+Key is stored in RAM only and will be wiped immediately.
+Write it down now if you need to decrypt later. (both hex values below)
+---
+OPERATION SUCCESSFUL
 
-╔═══════════════════════════════════════════════════════════════════╗
-║  ℹ️  Key is stored in RAM only and will be wiped immediately     ║
-║  ℹ️  Write it down now if you need to decrypt the file later     ║
-╚═══════════════════════════════════════════════════════════════════╝
+Target:         secret.txt
+Status:         ENCRYPTED (AES-256-CBC)
+Encryption key: SECURELY WIPED FROM MEMORY
 
-Wiping key in 3... 2... 1...
+The file/device is now encrypted and permanently unrecoverable - worthless without the key.
 
-╔══════════════════════════════════════════════════════════════════╗
-║                     ✓ OPERATION SUCCESSFUL                      ║
-╠══════════════════════════════════════════════════════════════════╣
-║  File:           secret.txt                                     ║
-║  Status:         ENCRYPTED (AES-256-CBC)                        ║
-║  Encryption key: SECURELY WIPED FROM MEMORY                     ║
-╠══════════════════════════════════════════════════════════════════╣
-║  The file content is now permanently unrecoverable.             ║
-║  You can safely delete the file with normal methods.            ║
-╚══════════════════════════════════════════════════════════════════╝
+To complete secure deletion process:
+ 1) You can safely remove the encrypted file with normal methods.
+ 2) Forget the key if you do not need to recover the data.
 ```
 
 **What happened:**
@@ -100,6 +95,57 @@ Wiping key in 3... 2... 1...
 - Key was wiped from RAM with 7-pass Gutmann method (0x00, 0xFF, random, 0x00, volatile)
 - Memory protection: POSIX mlock() prevented key from swapping to disk
 - File is now encrypted gibberish without the key
+
+### Example: Block Device Encryption
+
+```bash
+# Create a test partition or use existing device
+sudo datanuke /dev/sdb1
+```
+
+**Output:**
+```
+DataNuke v1.0.0 - Secure Data Deletion (BSI-compliant)
+
+Target: /dev/sdb1
+Type:   Block Device
+Method: Encrypt-then-Delete-Key
+
+Device size: 8.00 GB (8589934592 bytes)
+
+WARNING: This will DESTROY all data on /dev/sdb1!
+Type YES to confirm: YES
+
+Encrypting device...
+
+Progress: 8.00 GB / 8.00 GB (100.0%)  
+
+---
+ENCRYPTION KEY - SAVE NOW OR LOSE FOREVER
+
+Key: 9f2c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e
+IV:  1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d
+
+Key is stored in RAM only and will be wiped immediately.
+Write it down now if you need to decrypt later. (both hex values below)
+---
+OPERATION SUCCESSFUL
+
+Target:         /dev/sdb1
+Status:         ENCRYPTED (AES-256-CBC)
+Encryption key: SECURELY WIPED FROM MEMORY
+
+The file/device is now encrypted and permanently unrecoverable - worthless without the key.
+
+To complete secure deletion process:
+ 1) You can safely remove the encrypted file with normal methods.
+ 2) Forget the key if you do not need to recover the data.
+```
+
+**What happened:**
+- `/dev/sdb1` was encrypted in-place (raw sectors overwritten with encrypted data)
+- Device is now gibberish - can be formatted, reused, or physically destroyed
+- Without the key, data recovery is computationally infeasible
 
 ## Data Recovery
 
@@ -152,6 +198,8 @@ rm customer_data.csv invoices.pdf database.sqlite
 
 # Examples (requires root):
 sudo datanuke /dev/sdb        # Entire drive
+sudo datanuke /dev/sdb1       # Single partition
+sudo datanuke /dev/nvme0n1    # NVMe drive
 ```
 
 **Use cases for device encryption:**
@@ -160,15 +208,12 @@ sudo datanuke /dev/sdb        # Entire drive
 - 🔒 Irrevocable deletion of sensitive information
 - 💼 GDPR compliance (Art. 17 - Right to erasure)
 
-**After encryption:** You can safely format, delete, reuse, or physically destroy the device.fter encryption, the device is gibberish
-# You can format, reuse, or physically destroy it
-```
-
 **⚠️  Device Encryption Warnings:**
 - **Unmount before encrypting:** `sudo umount /dev/sdb1`
 - **Use live system** if target contains running OS (boot from Ubuntu Live USB)
 - **All data destroyed permanently** - no recovery possible
 - **"YES" confirmation required** - tool prevents accidental operations
+- **After encryption:** Device becomes unreadable gibberish - can be safely formatted, reused, or physically destroyed
 
 ## How It Works
 
