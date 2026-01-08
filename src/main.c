@@ -1,19 +1,19 @@
 /*
- * DiskNuke - Secure Data Deletion Tool
+ * DataNuke - Secure Data Deletion Tool
  * According to BSI recommendations (Bundesamt für Sicherheit in der Informationstechnik)
  * 
  * Method: Encrypt data with AES-256, then securely delete encryption key
  * This implements the BSI-recommended "Encrypt and throw away key" method
  */
 
-#include "disknuke.h"
+#include "datanuke.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 void print_usage(const char* program_name) {
-    printf("DiskNuke v%s - Secure Data Deletion Tool\n", DISKNUKE_VERSION);
+    printf("DataNuke v%s - Secure Data Deletion Tool\n", DATANUKE_VERSION);
     printf("Based on BSI recommendations (Germany)\n\n");
     printf("Usage: %s [OPTIONS] <target>\n\n", program_name);
     printf("Options:\n");
@@ -73,12 +73,12 @@ int main(int argc, char* argv[]) {
     
     printf("\n");
     printf("╔══════════════════════════════════════════╗\n");
-    printf("║         DiskNuke v%s                 ║\n", DISKNUKE_VERSION);
+    printf("║         DataNuke v%s                 ║\n", DATANUKE_VERSION);
     printf("║  Secure Data Deletion (BSI-compliant)   ║\n");
     printf("╚══════════════════════════════════════════╝\n");
     printf("\n");
     
-    int result = DISKNUKE_SUCCESS;
+    int result = DATANUKE_SUCCESS;
     
     // Encrypt file and delete key
     if (encrypt_file) {
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
         printf("Target: %s\n\n", encrypt_file);
         
         crypto_context_t ctx;
-        if (crypto_init(&ctx) != DISKNUKE_SUCCESS) {
+        if (crypto_init(&ctx) != DATANUKE_SUCCESS) {
             fprintf(stderr, "Failed to initialize cryptography\n");
             return 1;
         }
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
         printf("Step 1: Encrypting file with AES-256...\n");
         result = crypto_encrypt_file(encrypt_file, encrypted_path, &ctx);
         
-        if (result == DISKNUKE_SUCCESS) {
+        if (result == DATANUKE_SUCCESS) {
             printf("Encryption successful!\n\n");
             
             printf("Step 2: Displaying encryption key (ONLY ONCE)...\n");
@@ -112,13 +112,13 @@ int main(int argc, char* argv[]) {
             printf("\nStep 3: Securely deleting encryption key...\n");
             result = crypto_secure_wipe_key(&ctx);
             
-            if (result == DISKNUKE_SUCCESS) {
+            if (result == DATANUKE_SUCCESS) {
                 printf("Key securely deleted!\n\n");
                 
                 printf("Step 4: Deleting original file...\n");
                 result = secure_delete_file(encrypt_file);
                 
-                if (result == DISKNUKE_SUCCESS) {
+                if (result == DATANUKE_SUCCESS) {
                     printf("\n");
                     printf("╔══════════════════════════════════════════╗\n");
                     printf("║          OPERATION SUCCESSFUL            ║\n");
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
     
     printf("\n");
     
-    if (result != DISKNUKE_SUCCESS) {
+    if (result != DATANUKE_SUCCESS) {
         fprintf(stderr, "Operation failed with error code: %d\n", result);
         return 1;
     }

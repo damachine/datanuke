@@ -1,9 +1,9 @@
 /*
- * DiskNuke - Secure Data Deletion Tool
+ * DataNuke - Secure Data Deletion Tool
  * Platform-specific functions for Windows, Linux, and macOS
  */
 
-#include "disknuke.h"
+#include "datanuke.h"
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -24,7 +24,7 @@
 
 int platform_get_device_size(const char* device_path, uint64_t* size) {
     if (!device_path || !size) {
-        return DISKNUKE_ERROR_PLATFORM;
+        return DATANUKE_ERROR_PLATFORM;
     }
     
     #ifdef PLATFORM_WINDOWS
@@ -32,13 +32,13 @@ int platform_get_device_size(const char* device_path, uint64_t* size) {
                                  FILE_SHARE_READ | FILE_SHARE_WRITE,
                                  NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE) {
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     LARGE_INTEGER li;
     if (!GetFileSizeEx(hDevice, &li)) {
         CloseHandle(hDevice);
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     *size = li.QuadPart;
@@ -47,7 +47,7 @@ int platform_get_device_size(const char* device_path, uint64_t* size) {
     #elif defined(PLATFORM_LINUX)
     int fd = open(device_path, O_RDONLY);
     if (fd < 0) {
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     if (ioctl(fd, BLKGETSIZE64, size) < 0) {
@@ -55,7 +55,7 @@ int platform_get_device_size(const char* device_path, uint64_t* size) {
         struct stat st;
         if (fstat(fd, &st) < 0) {
             close(fd);
-            return DISKNUKE_ERROR_IO;
+            return DATANUKE_ERROR_IO;
         }
         *size = st.st_size;
     }
@@ -65,7 +65,7 @@ int platform_get_device_size(const char* device_path, uint64_t* size) {
     #elif defined(PLATFORM_MACOS)
     int fd = open(device_path, O_RDONLY);
     if (fd < 0) {
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     uint32_t block_size;
@@ -77,7 +77,7 @@ int platform_get_device_size(const char* device_path, uint64_t* size) {
         struct stat st;
         if (fstat(fd, &st) < 0) {
             close(fd);
-            return DISKNUKE_ERROR_IO;
+            return DATANUKE_ERROR_IO;
         }
         *size = st.st_size;
     } else {
@@ -87,7 +87,7 @@ int platform_get_device_size(const char* device_path, uint64_t* size) {
     close(fd);
     #endif
     
-    return DISKNUKE_SUCCESS;
+    return DATANUKE_SUCCESS;
 }
 
 int platform_is_device(const char* path) {
@@ -108,16 +108,16 @@ int platform_is_device(const char* path) {
 
 int platform_lock_memory(void* addr, size_t len) {
     #ifdef PLATFORM_WINDOWS
-    return VirtualLock(addr, len) ? DISKNUKE_SUCCESS : DISKNUKE_ERROR_PLATFORM;
+    return VirtualLock(addr, len) ? DATANUKE_SUCCESS : DATANUKE_ERROR_PLATFORM;
     #else
-    return (mlock(addr, len) == 0) ? DISKNUKE_SUCCESS : DISKNUKE_ERROR_PLATFORM;
+    return (mlock(addr, len) == 0) ? DATANUKE_SUCCESS : DATANUKE_ERROR_PLATFORM;
     #endif
 }
 
 int platform_unlock_memory(void* addr, size_t len) {
     #ifdef PLATFORM_WINDOWS
-    return VirtualUnlock(addr, len) ? DISKNUKE_SUCCESS : DISKNUKE_ERROR_PLATFORM;
+    return VirtualUnlock(addr, len) ? DATANUKE_SUCCESS : DATANUKE_ERROR_PLATFORM;
     #else
-    return (munlock(addr, len) == 0) ? DISKNUKE_SUCCESS : DISKNUKE_ERROR_PLATFORM;
+    return (munlock(addr, len) == 0) ? DATANUKE_SUCCESS : DATANUKE_ERROR_PLATFORM;
     #endif
 }

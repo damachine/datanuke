@@ -1,19 +1,19 @@
-#ifndef DISKNUKE_H
-#define DISKNUKE_H
+#ifndef DATANUKE_H
+#define DATANUKE_H
 
 #include <stdint.h>
 #include <stddef.h>
 
-#define DISKNUKE_VERSION "1.0.0"
+#define DATANUKE_VERSION "1.0.0"
 #define AES_KEY_SIZE 32  // 256 bits
 #define AES_BLOCK_SIZE 16
 
 // Return codes
-#define DISKNUKE_SUCCESS 0
-#define DISKNUKE_ERROR_IO -1
-#define DISKNUKE_ERROR_CRYPTO -2
-#define DISKNUKE_ERROR_MEMORY -3
-#define DISKNUKE_ERROR_PLATFORM -4
+#define DATANUKE_SUCCESS 0
+#define DATANUKE_ERROR_IO -1
+#define DATANUKE_ERROR_CRYPTO -2
+#define DATANUKE_ERROR_MEMORY -3
+#define DATANUKE_ERROR_PLATFORM -4
 
 // Encryption context
 typedef struct {
@@ -43,4 +43,4 @@ int platform_is_device(const char* path);
 int platform_lock_memory(void* addr, size_t len);
 int platform_unlock_memory(void* addr, size_t len);
 
-#endif // DISKNUKE_H
+#endif // DATANUKE_H

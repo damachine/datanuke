@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(disknuke VERSION 1.0.0 LANGUAGES C)
+project(datanuke VERSION 1.0.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -35,16 +35,16 @@ set(SOURCES
 )
 
 # Executable
-add_executable(disknuke ${SOURCES})
+add_executable(datanuke ${SOURCES})
 
 # OpenSSL for cryptography
 find_package(OpenSSL REQUIRED)
-target_link_libraries(disknuke OpenSSL::Crypto)
+target_link_libraries(datanuke OpenSSL::Crypto)
 
 # Platform-specific libraries
 if(UNIX AND NOT APPLE)
-    target_link_libraries(disknuke pthread)
+    target_link_libraries(datanuke pthread)
 endif()
 
 # Installation
-install(TARGETS disknuke DESTINATION bin)
+install(TARGETS datanuke DESTINATION bin)

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Quick build script for DiskNuke
+# Quick build script for DataNuke
 
-echo "Building DiskNuke..."
+echo "Building DataNuke..."
 
 # Create build directory if it doesn't exist
 if [ ! -d "build" ]; then
@@ -19,4 +19,4 @@ make -j$(nproc)
 
 echo ""
 echo "Build complete!"
-echo "Run './disknuke -h' for usage information"
+echo "Run './datanuke -h' for usage information"

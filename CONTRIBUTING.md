@@ -1,6 +1,6 @@
-# Contributing to DiskNuke
+# Contributing to DataNuke
 
-Thank you for your interest in DiskNuke!
+Thank you for your interest in DataNuke!
 
 ## How can I contribute?
 
@@ -37,8 +37,8 @@ Thank you for your interest in DiskNuke!
 ## Setting Up Development Environment
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/disknuke.git
-cd disknuke
+git clone https://github.com/YOUR_USERNAME/datanuke.git
+cd datanuke
 mkdir build && cd build
 cmake ..
 make

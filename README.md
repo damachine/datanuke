@@ -1,4 +1,4 @@
-# 💣 DiskNuke 🔐
+# 💣 DataNuke 🔐
 
 **BSI-Compliant Secure Data Deletion through Encryption and Key Destruction**
 
@@ -84,13 +84,13 @@ sudo apt-get install build-essential libssl-dev
 sudo apt-get install libtss2-dev
 
 # Compile
-gcc -o disknuke disknuke.c -lcrypto -O3 -Wall -Wextra
+gcc -o datanuke datanuke.c -lcrypto -O3 -Wall -Wextra
 
 # With TPM support
-gcc -o disknuke disknuke.c -lcrypto -ltss2-esys -DUSE_TPM -O3 -Wall -Wextra
+gcc -o datanuke datanuke.c -lcrypto -ltss2-esys -DUSE_TPM -O3 -Wall -Wextra
 
 # Install system-wide (optional)
-sudo install -m 755 disknuke /usr/local/bin/
+sudo install -m 755 datanuke /usr/local/bin/
 ```
 
 ### macOS
@@ -100,13 +100,13 @@ sudo install -m 755 disknuke /usr/local/bin/
 brew install openssl
 
 # Compile
-gcc -o disknuke disknuke.c \
+gcc -o datanuke datanuke.c \
     -I/usr/local/opt/openssl/include \
     -L/usr/local/opt/openssl/lib \
     -lcrypto -O3 -Wall -Wextra
 
 # Install
-sudo install -m 755 disknuke /usr/local/bin/
+sudo install -m 755 datanuke /usr/local/bin/
 ```
 
 ### Windows
@@ -116,10 +116,10 @@ sudo install -m 755 disknuke /usr/local/bin/
 # Then compile with Visual Studio or MinGW
 
 # MinGW
-gcc -o disknuke.exe disknuke.c -lcrypto -O3
+gcc -o datanuke.exe datanuke.c -lcrypto -O3
 
 # Visual Studio
-cl disknuke.c /I"C:\OpenSSL\include" /link /LIBPATH:"C:\OpenSSL\lib" libcrypto.lib
+cl datanuke.c /I"C:\OpenSSL\include" /link /LIBPATH:"C:\OpenSSL\lib" libcrypto.lib
 ```
 
 ### CMake Build (Recommended)
@@ -137,38 +137,38 @@ sudo cmake --install .
 
 ```bash
 # Linux - Wipe partition
-sudo ./disknuke /dev/sdb1
+sudo ./datanuke /dev/sdb1
 
 # Linux - Wipe entire disk
-sudo ./disknuke /dev/sdb
+sudo ./datanuke /dev/sdb
 
 # macOS - Wipe disk
-sudo ./disknuke /dev/disk2
+sudo ./datanuke /dev/disk2
 
 # Windows - Wipe physical drive (run as Administrator)
-disknuke.exe \\.\PhysicalDrive1
+datanuke.exe \\\\.\\PhysicalDrive1
 
 # File wiping
-sudo ./disknuke /path/to/sensitive/file.img
+sudo ./datanuke /path/to/sensitive/file.img
 ```
 
 ### Advanced Usage
 
 ```bash
 # Display key for 30 seconds (for recovery scenarios)
-sudo ./disknuke /dev/sdb1 -d 30
+sudo ./datanuke /dev/sdb1 -d 30
 
 # Instant key deletion (no display)
-sudo ./disknuke /dev/sdb1 -s
+sudo ./datanuke /dev/sdb1 -s
 
 # Use TPM 2.0 for key generation
-sudo ./disknuke /dev/sdb1 -t
+sudo ./datanuke /dev/sdb1 -t
 
 # Skip confirmation (automation)
-sudo ./disknuke /dev/sdb1 -y
+sudo ./datanuke /dev/sdb1 -y
 
 # Combined options
-sudo ./disknuke /dev/sdb1 -d 60 -t
+sudo ./datanuke /dev/sdb1 -d 60 -t
 ```
 
 ### Command-Line Options
@@ -203,11 +203,11 @@ sudo dd if=/dev/sdb of=backup.img bs=4M status=progress
 # 3. Verify backup integrity
 md5sum backup.img
 
-# 4. Run DiskNuke on TEST data first
-sudo ./disknuke testfile.dat
+# 4. Run DataNuke on TEST data first
+sudo ./datanuke testfile.dat
 
 # 5. If test successful, wipe real target
-sudo ./disknuke /dev/sdb1 -d 30  # 30 sec key display for safety
+sudo ./datanuke /dev/sdb1 -d 30  # 30 sec key display for safety
 
 # 6. (Optional) Physical destruction of media for maximum security
 ```
@@ -325,7 +325,7 @@ TSS2_RC rc = Esys_GetRandom(
 ## 🏗️ Project Structure
 
 ```
-disknuke/
+datanuke/
 ├── src/
 │   ├── main.c              # Entry point and CLI
 │   ├── crypto/
@@ -340,7 +340,7 @@ disknuke/
 │       ├── secure_memory.c # Memory wiping
 │       └── progress.c      # Progress display
 ├── include/
-│   └── disknuke.h          # Public API
+│   └── datanuke.h          # Public API
 ├── tests/
 │   ├── unit/               # Unit tests
 │   └── integration/        # Integration tests
@@ -368,8 +368,8 @@ ctest --verbose
 # Create test image
 dd if=/dev/zero of=test.img bs=1M count=100
 
-# Run DiskNuke
-sudo ./disknuke test.img -s
+# Run DataNuke
+sudo ./datanuke test.img -s
 
 # Verify encryption (should be unreadable)
 hexdump -C test.img | head
@@ -378,13 +378,13 @@ hexdump -C test.img | head
 ### Security Audit
 ```bash
 # Check for sensitive data in memory dumps
-valgrind --leak-check=full ./disknuke test.img
+valgrind --leak-check=full ./datanuke test.img
 
 # Static analysis
 cppcheck --enable=all src/
 
 # Dynamic analysis
-gcc -fsanitize=address,undefined disknuke.c -lcrypto
+gcc -fsanitize=address,undefined datanuke.c -lcrypto
 ```
 
 ## 🤝 Contributing
@@ -436,7 +436,7 @@ git push origin feature/my-feature
 MIT License - see [LICENSE](LICENSE) file for details.
 
 ```
-Copyright (c) 2026 DiskNuke Contributors
+Copyright (c) 2026 DataNuke Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -475,12 +475,12 @@ This software uses strong cryptography. Some countries restrict the import, use,
 
 ## 📬 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/damachine/disknuke/issues)
+- **Issues**: [GitHub Issues](https://github.com/damachine/datanuke/issues)
 - **Security**: See [SECURITY.md](SECURITY.md) for responsible disclosure
-- **Discussions**: [GitHub Discussions](https://github.com/damachine/disknuke/discussions)
+- **Discussions**: [GitHub Discussions](https://github.com/damachine/datanuke/discussions)
 
 ---
 
 **Built with 🔐 for Data Security**
 
-**Remember**: The best security is layered security. Use DiskNuke as part of a comprehensive data protection strategy.
+**Remember**: The best security is layered security. Use DataNuke as part of a comprehensive data protection strategy.

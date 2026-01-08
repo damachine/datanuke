@@ -1,9 +1,9 @@
 /*
- * DiskNuke - Secure Data Deletion Tool
+ * DataNuke - Secure Data Deletion Tool
  * Secure Delete Module - BSI-compliant data deletion
  */
 
-#include "disknuke.h"
+#include "datanuke.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,26 +19,26 @@
 
 int secure_overwrite(const char* path, size_t passes) {
     if (!path || passes == 0) {
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     struct stat st;
     if (stat(path, &st) != 0) {
         perror("Cannot stat file");
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     FILE* file = fopen(path, "rb+");
     if (!file) {
         perror("Cannot open file for overwriting");
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     size_t file_size = st.st_size;
     unsigned char* buffer = malloc(4096);
     if (!buffer) {
         fclose(file);
-        return DISKNUKE_ERROR_MEMORY;
+        return DATANUKE_ERROR_MEMORY;
     }
     
     printf("Securely overwriting %s (%zu bytes) with %zu passes...\n", 
@@ -70,7 +70,7 @@ int secure_overwrite(const char* path, size_t passes) {
                 perror("Error writing during overwrite");
                 free(buffer);
                 fclose(file);
-                return DISKNUKE_ERROR_IO;
+                return DATANUKE_ERROR_IO;
             }
             
             remaining -= chunk_size;
@@ -91,11 +91,11 @@ int secure_overwrite(const char* path, size_t passes) {
     // Finally, delete the file
     if (remove(path) != 0) {
         perror("Error removing file");
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     printf("File securely deleted.\n");
-    return DISKNUKE_SUCCESS;
+    return DATANUKE_SUCCESS;
 }
 
 int secure_delete_file(const char* path) {
@@ -105,7 +105,7 @@ int secure_delete_file(const char* path) {
 
 int secure_delete_device(const char* device_path) {
     if (!device_path) {
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     printf("WARNING: This will permanently destroy all data on %s\n", device_path);
@@ -113,7 +113,7 @@ int secure_delete_device(const char* device_path) {
     
     char confirmation[10];
     if (fgets(confirmation, sizeof(confirmation), stdin) == NULL) {
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     // Remove newline
@@ -121,13 +121,13 @@ int secure_delete_device(const char* device_path) {
     
     if (strcmp(confirmation, "YES") != 0) {
         printf("Operation cancelled.\n");
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     
     uint64_t device_size = 0;
-    if (platform_get_device_size(device_path, &device_size) != DISKNUKE_SUCCESS) {
+    if (platform_get_device_size(device_path, &device_size) != DATANUKE_SUCCESS) {
         fprintf(stderr, "Cannot determine device size\n");
-        return DISKNUKE_ERROR_PLATFORM;
+        return DATANUKE_ERROR_PLATFORM;
     }
     
     printf("Device size: %llu bytes (%.2f GB)\n", 
@@ -140,13 +140,13 @@ int secure_delete_device(const char* device_path) {
                                  NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Cannot open device\n");
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     #else
     int fd = open(device_path, O_WRONLY | O_SYNC);
     if (fd < 0) {
         perror("Cannot open device");
-        return DISKNUKE_ERROR_IO;
+        return DATANUKE_ERROR_IO;
     }
     #endif
     
@@ -157,7 +157,7 @@ int secure_delete_device(const char* device_path) {
         #else
         close(fd);
         #endif
-        return DISKNUKE_ERROR_MEMORY;
+        return DATANUKE_ERROR_MEMORY;
     }
     
     printf("Starting secure device wipe...\n");
@@ -175,7 +175,7 @@ int secure_delete_device(const char* device_path) {
             fprintf(stderr, "Error writing to device\n");
             free(buffer);
             CloseHandle(hDevice);
-            return DISKNUKE_ERROR_IO;
+            return DATANUKE_ERROR_IO;
         }
         #else
         ssize_t result = write(fd, buffer, chunk_size);
@@ -183,7 +183,7 @@ int secure_delete_device(const char* device_path) {
             perror("Error writing to device");
             free(buffer);
             close(fd);
-            return DISKNUKE_ERROR_IO;
+            return DATANUKE_ERROR_IO;
         }
         #endif
         
@@ -205,5 +205,5 @@ int secure_delete_device(const char* device_path) {
     #endif
     
     printf("Device securely wiped.\n");
-    return DISKNUKE_SUCCESS;
+    return DATANUKE_SUCCESS;
 }
