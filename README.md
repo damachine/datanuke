@@ -4,11 +4,15 @@
 
 BSI-compliant secure data deletion through encryption and key destruction.
 
+**POSIX-compliant** tool for Unix-like systems (Linux, macOS, BSD).
+
 ## What It Does
 
-Encrypts files in-place with AES-256-CBC, displays the encryption key, then permanently wipes the key from RAM. Without the key, the encrypted data is irrecoverable.
+**Implements the BSI method: "Daten verschlüsseln und Schlüssel wegwerfen"** (Encrypt data and throw away the key)
 
-Based on [BSI (German Federal Office for Information Security)](https://www.bsi.bund.de/) recommendations: **"Encrypt-then-Delete-Key"** (BSI CON.6).
+Encrypts files or entire devices in-place with AES-256-CBC, displays the encryption key once, then permanently wipes the key from RAM. Without the key, the encrypted data is permanently irrecoverable.
+
+Based on [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://www.bsi.bund.de/DE/Themen/Verbraucherinnen-und-Verbraucher/Informationen-und-Empfehlungen/Cyber-Sicherheitsempfehlungen/Daten-sichern-verschluesseln-und-loeschen/Daten-endgueltig-loeschen/daten-endgueltig-loeschen_node.html) recommendations: **"Encrypt-then-Delete-Key"** (BSI CON.6).
 
 ## Why This Method?
 
@@ -20,23 +24,29 @@ Based on [BSI (German Federal Office for Information Security)](https://www.bsi.
 ## Installation
 
 ```bash
-# Linux/macOS
+# Dependencies
 sudo apt-get install build-essential libssl-dev cmake  # Debian/Ubuntu
 # or: brew install openssl cmake  # macOS
 
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build .
-sudo cmake --install .
+# Build
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+sudo cmake --install build
 ```
 
 ## Usage
 
 ```bash
+# Encrypt a file
 sudo datanuke <file>
+
+# Encrypt a block device (entire drive/partition)
+sudo datanuke <device>
 ```
 
-### Example
+**After encryption:** You can safely format, delete, reuse, or physically destroy the file/device.
+
+### Example: File Encryption
 
 ```bash
 echo "Sensitive data" > secret.txt
@@ -84,8 +94,11 @@ Wiping key in 3... 2... 1...
 
 **What happened:**
 - `secret.txt` was encrypted in-place (same filename, different content)
-- Encryption key was displayed on screen
-- Key was wiped from RAM with 7-pass Gutmann method
+- Algorithm: AES-256-CBC with random 256-bit key and 128-bit IV
+- Key generation: OpenSSL RAND_bytes() (cryptographically secure)
+- Encryption key was displayed on screen (one-time only)
+- Key was wiped from RAM with 7-pass Gutmann method (0x00, 0xFF, random, 0x00, volatile)
+- Memory protection: POSIX mlock() prevented key from swapping to disk
 - File is now encrypted gibberish without the key
 
 ## Data Recovery
@@ -113,21 +126,41 @@ openssl enc -d -aes-256-cbc \
 
 ## Use Cases
 
-**Selling laptop/PC:**
+**File Encryption - Selling laptop/PC:**
 ```bash
 find ~/Documents -type f -exec sudo datanuke {} \;
 ```
 
-**GDPR compliance (right to erasure):**
+**File Encryption - GDPR compliance (right to erasure):**
 ```bash
 sudo datanuke customer_data.csv
 rm customer_data.csv
 ```
 
-**Decommissioning storage:**
+**Device Encryption - Wiping entire drive before sale/disposal:**
 ```bash
-find /mnt/old_drive -type f -exec sudo datanuke {} \;
+# ⚠️  USE LIVE SYSTEM (boot from USB) when wiping OS drive!
+# ⚠️  Cannot wipe drive with running OS!
+
+# Examples (requires root):
+sudo datanuke /dev/sdb        # Entire drive
 ```
+
+**Use cases for device encryption:**
+- 📱 Selling, gifting, or trading in devices
+- 🗑️ Disposing of old hard drives and SSDs
+- 🔒 Irrevocable deletion of sensitive information
+- 💼 GDPR compliance (Art. 17 - Right to erasure)
+
+**After encryption:** You can safely format, delete, reuse, or physically destroy the device.fter encryption, the device is gibberish
+# You can format, reuse, or physically destroy it
+```
+
+**⚠️  Device Encryption Warnings:**
+- **Unmount before encrypting:** `sudo umount /dev/sdb1`
+- **Use live system** if target contains running OS (boot from Ubuntu Live USB)
+- **All data destroyed permanently** - no recovery possible
+- **"YES" confirmation required** - tool prevents accidental operations
 
 ## How It Works
 
@@ -143,19 +176,26 @@ Key: [destroyed from RAM]
 Result: Encrypted file, no key = data is powerless
 ```
 
-## Technical Details
-
-- **Algorithm**: AES-256-CBC (OpenSSL EVP API)
-- **Key generation**: OpenSSL RAND_bytes() (CSPRNG)
-- **Key wiping**: 7-pass Gutmann (0x00, 0xFF, random, 0x00, volatile)
-- **Memory protection**: mlock() prevents swapping to disk
-- **Platform support**: Windows, Linux, macOS
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+BSI Method: "Daten verschlüsseln und Schlüssel wegwerfen"
 
-## License
+DataNuke implements the official BSI (Bundesamt für Sicherheit in der Informationstechnik) recommendation for secure data deletion:
+
+> **"Wenn Sie die Daten auf dem Datenträger oder Gerät verschlüsselt haben, reicht es aus, alle Schlüssel sicher zu löschen. Diese Methode bietet – sofern der Schlüssel tatsächlich gelöscht und nicht nur als gelöscht markiert wurde – einen zuverlässigen Schutz gegen eine unbefugte Wiederherstellung."**
+
+Translation: *"If you have encrypted the data on the storage medium or device, it is sufficient to securely delete all keys. This method provides – provided the key is actually deleted and not just marked as deleted – reliable protection against unauthorized recovery."*
+
+This is exactly what DataNuke does:
+1. ✅ Encrypts data with AES-256-CBC
+2. ✅ Displays key once (optional save for recovery)
+3. ✅ **Securely deletes key** (7-pass Gutmann wipe, volatile memory)
+4. ✅ Key is never written to disk (POSIX mlock())
+
+## References
+
+- [BSI: Daten endgültig löschen](https://www.bsi.bund.de/DE/Themen/Verbraucherinnen-und-Verbraucher/Informationen-und-Empfehlungen/Cyber-Sicherheitsempfehlungen/Daten-sichern-verschluesseln-und-loeschen/Daten-endgueltig-loeschen/daten-endgueltig-loeschen_node.html)## License
 
 MIT License - see [LICENSE](LICENSE) file.
 

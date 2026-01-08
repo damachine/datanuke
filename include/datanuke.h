@@ -94,6 +94,14 @@ int crypto_generate_key(uint8_t *key, size_t key_size);
 int crypto_encrypt_file(const char *input_path, const char *output_path, crypto_context_t *ctx);
 
 /**
+ * @brief Encrypt block device using AES-256-CBC
+ * @param device_path Path to block device (e.g., /dev/sdb)
+ * @param ctx Initialized crypto context
+ * @return DATANUKE_SUCCESS, DATANUKE_ERROR_IO, or DATANUKE_ERROR_CRYPTO
+ */
+int crypto_encrypt_device(const char *device_path, crypto_context_t *ctx);
+
+/**
  * @brief Display encryption key in hexadecimal (ONE TIME ONLY)
  * @param ctx Crypto context containing key to display
  */

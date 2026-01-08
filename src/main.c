@@ -19,15 +19,18 @@ void print_usage(const char *program_name) {
     printf("DataNuke v%s - Secure Data Deletion Tool\n", DATANUKE_VERSION);
     printf("\"Makes data powerless\"\n");
     printf("Based on BSI recommendations (Germany)\n\n");
-    printf("Usage: %s <file>\n\n", program_name);
+    printf("Usage: %s <file|device>\n\n", program_name);
     printf("Description:\n");
-    printf("  Encrypts a file with AES-256-CBC and securely deletes the key.\n");
-    printf("  After encryption, the original file is securely overwritten.\n");
-    printf("  The encrypted file can be safely deleted with normal methods.\n\n");
+    printf("  Encrypts files or entire block devices with AES-256-CBC.\n");
+    printf("  After encryption, the key is securely destroyed.\n\n");
     printf("Examples:\n");
-    printf("  %s secret.txt              # Encrypt and prepare for deletion\n", program_name);
-    printf("  %s document.pdf            # Secure file deletion\n", program_name);
-    printf("  %s /path/to/sensitive.dat  # Full path\n\n", program_name);
+    printf("  %s secret.txt              # Encrypt file\n", program_name);
+    printf("  %s /dev/sdb                # Encrypt entire drive (requires root)\n", program_name);
+    printf("  %s /dev/sdb1               # Encrypt partition\n\n", program_name);
+    printf("WARNING FOR DEVICES:\n");
+    printf("  - Cannot encrypt mounted devices (umount first)\n");
+    printf("  - Cannot encrypt device with running OS (use live system)\n");
+    printf("  - This DESTROYS all data on the device permanently!\n\n");
     printf("WARNING: This tool permanently destroys data!\n");
     printf("         Make backups before use!\n");
 }
@@ -54,6 +57,14 @@ int main(int argc, char *argv[]) {
 
     char *target_file = argv[1];
 
+    // Check if target is a block device
+    int is_device = platform_is_device(target_file);
+
+    if (is_device < 0) {
+        fprintf(stderr, "Error: Cannot access %s\n", target_file);
+        return 1;
+    }
+
     printf("\n");
     printf("╔══════════════════════════════════════════╗\n");
     printf("║         DataNuke v%s                 ║\n", DATANUKE_VERSION);
@@ -62,7 +73,24 @@ int main(int argc, char *argv[]) {
     printf("╚══════════════════════════════════════════╝\n");
     printf("\n");
     printf("Target: %s\n", target_file);
+    printf("Type:   %s\n", is_device ? "Block Device" : "Regular File");
     printf("Method: Encrypt-then-Delete-Key (BSI)\n\n");
+
+    if (is_device) {
+        uint64_t size;
+        if (platform_get_device_size(target_file, &size) == DATANUKE_SUCCESS) {
+            printf("Device size: %.2f GB (%llu bytes)\n\n", size / (1024.0 * 1024.0 * 1024.0),
+                   (unsigned long long)size);
+        }
+        printf("\033[1;31m⚠️  WARNING: This will DESTROY all data on %s!\033[0m\n", target_file);
+        printf("Type 'YES' to confirm (uppercase): ");
+        char confirm[10];
+        if (fgets(confirm, sizeof(confirm), stdin) == NULL || strncmp(confirm, "YES\n", 4) != 0) {
+            printf("Aborted.\n");
+            return 1;
+        }
+        printf("\n");
+    }
 
     crypto_context_t ctx;
     if (crypto_init(&ctx) != DATANUKE_SUCCESS) {
@@ -73,28 +101,42 @@ int main(int argc, char *argv[]) {
     // Lock key in memory to prevent swapping
     platform_lock_memory(&ctx, sizeof(ctx));
 
-    char temp_path[512];
-    char encrypted_path[512];
-    snprintf(temp_path, sizeof(temp_path), "%s.tmp_encrypted", target_file);
-    snprintf(encrypted_path, sizeof(encrypted_path), "%s", target_file);
+    int result;
 
-    // Encrypt file
-    int result = crypto_encrypt_file(target_file, temp_path, &ctx);
+    if (is_device) {
+        // Encrypt entire block device
+        result = crypto_encrypt_device(target_file, &ctx);
 
-    if (result != DATANUKE_SUCCESS) {
-        fprintf(stderr, "Encryption failed\n");
-        platform_unlock_memory(&ctx, sizeof(ctx));
-        crypto_cleanup(&ctx);
-        return 1;
-    }
+        if (result != DATANUKE_SUCCESS) {
+            fprintf(stderr, "Device encryption failed\n");
+            platform_unlock_memory(&ctx, sizeof(ctx));
+            crypto_cleanup(&ctx);
+            return 1;
+        }
+    } else {
+        // Encrypt regular file
+        char temp_path[512];
+        char encrypted_path[512];
+        snprintf(temp_path, sizeof(temp_path), "%s.tmp_encrypted", target_file);
+        snprintf(encrypted_path, sizeof(encrypted_path), "%s", target_file);
 
-    // Rename temp file to original name (overwrites original)
-    if (remove(target_file) != 0 || rename(temp_path, encrypted_path) != 0) {
-        fprintf(stderr, "Failed to replace original file with encrypted version\n");
-        remove(temp_path);
-        platform_unlock_memory(&ctx, sizeof(ctx));
-        crypto_cleanup(&ctx);
-        return 1;
+        result = crypto_encrypt_file(target_file, temp_path, &ctx);
+
+        if (result != DATANUKE_SUCCESS) {
+            fprintf(stderr, "Encryption failed\n");
+            platform_unlock_memory(&ctx, sizeof(ctx));
+            crypto_cleanup(&ctx);
+            return 1;
+        }
+
+        // Rename temp file to original name (overwrites original)
+        if (remove(target_file) != 0 || rename(temp_path, encrypted_path) != 0) {
+            fprintf(stderr, "Failed to replace original file with encrypted version\n");
+            remove(temp_path);
+            platform_unlock_memory(&ctx, sizeof(ctx));
+            crypto_cleanup(&ctx);
+            return 1;
+        }
     }
 
     // Display key with countdown
@@ -115,12 +157,17 @@ int main(int argc, char *argv[]) {
     printf("╔══════════════════════════════════════════════════════════════════╗\n");
     printf("║                     ✓ OPERATION SUCCESSFUL                      ║\n");
     printf("╠══════════════════════════════════════════════════════════════════╣\n");
-    printf("║  File:           %s%-40s%s  ║\n", "\033[1;36m", encrypted_path, "\033[0m");
+    printf("║  Target:         %s%-40s%s  ║\n", "\033[1;36m", target_file, "\033[0m");
     printf("║  Status:         %sENCRYPTED (AES-256-CBC)%s                      ║\n", "\033[1;32m", "\033[0m");
     printf("║  Encryption key: %sSECURELY WIPED FROM MEMORY%s                 ║\n", "\033[1;31m", "\033[0m");
     printf("╠══════════════════════════════════════════════════════════════════╣\n");
-    printf("║  The file content is now permanently unrecoverable.             ║\n");
-    printf("║  You can safely delete the file with normal methods.            ║\n");
+    if (is_device) {
+        printf("║  The device is now encrypted and permanently unrecoverable.     ║\n");
+        printf("║  You can safely format, reuse, or physically destroy it.       ║\n");
+    } else {
+        printf("║  The file content is now permanently unrecoverable.             ║\n");
+        printf("║  You can safely delete the file with normal methods.            ║\n");
+    }
     printf("╚══════════════════════════════════════════════════════════════════╝\n");
     printf("\n");
 

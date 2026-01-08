@@ -295,3 +295,127 @@ void crypto_cleanup(crypto_context_t *ctx) {
         memset(ctx, 0, sizeof(crypto_context_t));
     }
 }
+
+/**
+ * @brief Encrypt a block device using AES-256-CBC
+ *
+ * Reads the device in 1MB chunks, encrypts each chunk using
+ * AES-256-CBC mode, and writes the encrypted data back to the device.
+ * Shows progress indicator during operation.
+ *
+ * WARNING: This DESTROYS all data on the device permanently!
+ *
+ * @param device_path Path to the block device (e.g., /dev/sdb)
+ * @param ctx Pointer to initialized crypto_context_t with key and IV
+ * @return DATANUKE_SUCCESS on success, error code on failure
+ */
+int crypto_encrypt_device(const char *device_path, crypto_context_t *ctx) {
+    if (!device_path || !ctx) {
+        return DATANUKE_ERROR_CRYPTO;
+    }
+
+    // Open device for read/write with synchronous I/O
+    FILE *device = fopen(device_path, "r+b");
+    if (!device) {
+        perror("Cannot open device");
+        return DATANUKE_ERROR_IO;
+    }
+
+    // Get device size
+    uint64_t device_size = 0;
+    if (platform_get_device_size(device_path, &device_size) != DATANUKE_SUCCESS) {
+        fprintf(stderr, "Error getting device size\n");
+        fclose(device);
+        return DATANUKE_ERROR_IO;
+    }
+
+    EVP_CIPHER_CTX *cipher_ctx = EVP_CIPHER_CTX_new();
+    if (!cipher_ctx) {
+        fprintf(stderr, "Error creating cipher context\n");
+        fclose(device);
+        return DATANUKE_ERROR_CRYPTO;
+    }
+
+    // Initialize AES-256-CBC encryption
+    if (EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_cbc(), NULL, ctx->key, ctx->iv) != 1) {
+        fprintf(stderr, "Error initializing encryption: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        EVP_CIPHER_CTX_free(cipher_ctx);
+        fclose(device);
+        return DATANUKE_ERROR_CRYPTO;
+    }
+
+    // Process device in 1MB chunks for efficiency
+    const size_t CHUNK_SIZE = 1024 * 1024; // 1MB
+    unsigned char *inbuf = malloc(CHUNK_SIZE);
+    unsigned char *outbuf = malloc(CHUNK_SIZE + EVP_MAX_BLOCK_LENGTH);
+
+    if (!inbuf || !outbuf) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(inbuf);
+        free(outbuf);
+        EVP_CIPHER_CTX_free(cipher_ctx);
+        fclose(device);
+        return DATANUKE_ERROR_MEMORY;
+    }
+
+    uint64_t processed = 0;
+    int outlen;
+    size_t bytes_read;
+
+    printf("\n");
+    printf("\033[1;36m╔═══════════════════════════════════════════════════════════════════╗\033[0m\n");
+    printf("\033[1;36m║                     ENCRYPTING DEVICE...                         ║\033[0m\n");
+    printf("\033[1;36m╚═══════════════════════════════════════════════════════════════════╝\033[0m\n");
+    printf("\n");
+
+    // Read, encrypt, and write back in chunks
+    while ((bytes_read = fread(inbuf, 1, CHUNK_SIZE, device)) > 0) {
+        // Encrypt chunk
+        if (EVP_EncryptUpdate(cipher_ctx, outbuf, &outlen, inbuf, bytes_read) != 1) {
+            fprintf(stderr, "\nError during encryption: %s\n", ERR_error_string(ERR_get_error(), NULL));
+            free(inbuf);
+            free(outbuf);
+            EVP_CIPHER_CTX_free(cipher_ctx);
+            fclose(device);
+            return DATANUKE_ERROR_CRYPTO;
+        }
+
+        // Seek back to write position
+        fseek(device, -(long)bytes_read, SEEK_CUR);
+
+        // Write encrypted data back to device
+        if (fwrite(outbuf, 1, outlen, device) != (size_t)outlen) {
+            fprintf(stderr, "\nError writing to device\n");
+            free(inbuf);
+            free(outbuf);
+            EVP_CIPHER_CTX_free(cipher_ctx);
+            fclose(device);
+            return DATANUKE_ERROR_IO;
+        }
+
+        // Flush to ensure data is written
+        fflush(device);
+
+        processed += bytes_read;
+
+        // Show progress
+        double percent = (processed * 100.0) / device_size;
+        double gb_processed = processed / (1024.0 * 1024.0 * 1024.0);
+        double gb_total = device_size / (1024.0 * 1024.0 * 1024.0);
+
+        printf("\r\033[1;36mProgress: %.2f GB / %.2f GB (%.1f%%)  \033[0m", gb_processed, gb_total, percent);
+        fflush(stdout);
+    }
+
+    // Note: We don't call EVP_EncryptFinal_ex for devices
+    // because we're encrypting raw sectors, not a padded file format
+
+    printf("\n\n");
+
+    free(inbuf);
+    free(outbuf);
+    EVP_CIPHER_CTX_free(cipher_ctx);
+    fclose(device);
+
+    return DATANUKE_SUCCESS;
+}
