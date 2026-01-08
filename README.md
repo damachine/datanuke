@@ -2,13 +2,26 @@
 
 **Makes data powerless**
 
+```
+Encrypt  →  Trash  →  Gone          
+```
+
+**How it works:**
+```
+File: "Sensitive Data..."
+  ↓ AES-256-CBC encryption with random key
+File: 0x7a3f89c2... (encrypted)
+  ↓ Display key on screen
+Key: [user can save it]
+  ↓ 7-pass Gutmann wipe
+Key: [destroyed from RAM]
+  ↓ Normal file deletion
+Result: Encrypted file, no key = data is powerless
+```
+
 BSI-compliant secure data deletion through encryption and key destruction.
 
 **Cross-platform:** Linux, macOS, Windows, BSD.
-
-```
-║      Encrypt  →  Trash  →  Gone          
-```
 
 ---
 
@@ -20,6 +33,7 @@ BSI-compliant secure data deletion through encryption and key destruction.
 > - **This is NOT a backup tool** - make backups first
 > - **This is NOT reversible** - unless you save the encryption key
 > - **Test on non-critical data first** - understand how it works before using on important data
+> - **Always double-check the target** - verify you're encrypting the correct file/device before confirming
 
 ---
 
@@ -85,7 +99,12 @@ cmake --install build
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-sudo cmake --install build  # or cmake --install build on Windows
+
+# Linux/macOS (requires sudo for /usr/bin):
+sudo cmake --install build
+
+# Windows (no sudo needed):
+cmake --install build
 ```
 
 ## Usage
@@ -215,10 +234,19 @@ openssl enc -d -aes-256-cbc \
 
 **For permanent deletion:** Don't save the key.
 
+> [!WARNING]
+> **Key Storage Security**
+>
+> If you save the encryption key on a compromised system, your data may NOT be securely deleted. An attacker with access to the system could recover both the encrypted data and the key, defeating the entire purpose of secure deletion.
+>
+> - **Never save the key on the same system** you're trying to securely delete data from
+> - **Store keys offline** (paper, secure external storage) if recovery is needed
+> - **For true secure deletion:** Don't save the key at all - just let it be destroyed
+
 ## Security Notes
 
 - **File is encrypted in-place** - same filename, encrypted content
-- **Works with ANY file type** - text, images, videos, databases, archives, etc.
+- **Works with files and entire devices** - any file type (text, images, videos, databases, archives) or block device (SSD, HDD, USB drives, partitions)
 - **Key stored in RAM only** - never touches disk
 - **Key displayed once** - write it down or lose it forever
 - **7-pass Gutmann wipe** - key is destroyed from memory
@@ -271,33 +299,14 @@ sudo datanuke /dev/nvme0n1    # NVMe drive
 - **"YES" confirmation required** - tool prevents accidental operations
 - **After encryption:** Device becomes unreadable gibberish - can be safely formatted, reused, or physically destroyed
 
-## How It Works
-
-```
-File: "Sensitive Data..."
-  ↓ AES-256-CBC encryption with random key
-File: 0x7a3f89c2... (encrypted)
-  ↓ Display key on screen
-Key: [user can save it]
-  ↓ 7-pass Gutmann wipe
-Key: [destroyed from RAM]
-  ↓ Normal file deletion
-Result: Encrypted file, no key = data is powerless
-```
-
 ## BSI Method: "Daten verschlüsseln und Schlüssel wegwerfen"
 
-DataNuke implements the official BSI (Bundesamt für Sicherheit in der Informationstechnik) recommendation for secure data deletion:
+DataNuke implements the official [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://www.bsi.bund.de/) recommendation for secure data deletion: **Encrypt data with strong encryption (AES-256-CBC), then securely delete all keys**. This method provides reliable protection against unauthorized recovery — provided the key is actually deleted, not just marked as deleted.
 
-> **"Wenn Sie die Daten auf dem Datenträger oder Gerät verschlüsselt haben, reicht es aus, alle Schlüssel sicher zu löschen. Diese Methode bietet – sofern der Schlüssel tatsächlich gelöscht und nicht nur als gelöscht markiert wurde – einen zuverlässigen Schutz gegen eine unbefugte Wiederherstellung."**
+> *"Wenn Sie die Daten auf dem Datenträger oder Gerät verschlüsselt haben, reicht es aus, alle Schlüssel sicher zu löschen."*  
+> — BSI CON.6 (German Federal Office for Information Security)
 
-Translation: *"If you have encrypted the data on the storage medium or device, it is sufficient to securely delete all keys. This method provides – provided the key is actually deleted and not just marked as deleted – reliable protection against unauthorized recovery."*
-
-This is exactly what DataNuke does:
-1. Encrypts data with AES-256-CBC
-2. Displays key once (optional save for recovery)
-3. Securely deletes key (7-pass Gutmann wipe, volatile memory)
-4. Key is never written to disk (POSIX mlock())
+**Implementation:** AES-256-CBC encryption → Display key once → 7-pass Gutmann wipe → RAM-only storage (POSIX mlock)
 
 ## Contributing
 
