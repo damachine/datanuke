@@ -39,6 +39,12 @@ gnupg/
 *.bak
 *.env
 
+# DataNuke test files and artifacts
+*.encrypted
+*.img
+test*
+*.backup
+
 # Editor files
 *.code-workspace
 *.kate-swp
