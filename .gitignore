@@ -43,6 +43,7 @@ gnupg/
 *.encrypted
 *.img
 test*
+!test_etdk.sh
 *.backup
 
 # Editor files
