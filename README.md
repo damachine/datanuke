@@ -73,6 +73,9 @@ sudo emerge dev-libs/openssl dev-util/cmake
 # Build and install
 make
 sudo make install
+
+# Test (optional)
+bash test_etdk.sh
 ```
 
 ### macOS
@@ -102,9 +105,12 @@ sudo cmake --install build
 cmake --install build
 ```
 
-## Usage
+## Quick Start
 
 ```bash
+# Test first (safe - creates temp file)
+bash test_etdk.sh
+
 # Encrypt a file
 sudo etdk <file>
 
@@ -217,7 +223,8 @@ To complete secure deletion process:
 - Algorithm: AES-256-CBC with random 256-bit key and 128-bit IV
 - Key generation: OpenSSL RAND_bytes() (cryptographically secure)
 - Encryption key was displayed on screen (one-time only)
-- Key was wiped from RAM with 7-pass Gutmann method (0x00, 0xFF, random, 0x00, volatile)
+- Key was wiped from RAM with 5-pass method (0x00, 0xFF, random, 0x00, volatile pointers)
+- Why 5 passes: RAM has no magnetic remanence (unlike HDDs), random data + volatile pointers = cryptographically secure wipe
 - Memory protection: POSIX mlock() prevented key from swapping to disk
 - File/Device is now gibberish - can be formatted, reused, or physically destroyed
 - Without the key, data recovery is computationally infeasible
@@ -250,17 +257,47 @@ openssl enc -d -aes-256-cbc \
 >
 > - **File is encrypted in-place** - same filename, encrypted content
 > - **Works with files and entire devices** - any file type (text, images, videos, databases, archives) or block device (SSD, HDD, USB drives, partitions)
-> - **Key stored in RAM only** - never touches disk
-> - **Key displayed once** - write it down or lose it forever
-> - **7-pass Gutmann wipe** - key is destroyed from memory
-> - **AES-256-CBC** - computationally infeasible to break
-> - **Encrypted file is unreadable** without the key - permanently destroyed data
+> - **Key stored in RAM only** - never touches disk, locked with mlock()
+> - **Key displayed once** - write it down or lose it forever (3-second pause)
+> - **5-pass secure wipe** - key destroyed from RAM (0x00 → 0xFF → random → 0x00 → volatile)
+> - **AES-256-CBC** - NIST standard, computationally infeasible to break
+> - **BSI compliant** - follows German Federal Office for Information Security recommendations
 
-## Use Cases
 - Selling, gifting, or trading in devices
 - Disposing of old hard drives and SSDs
 - Irrevocable deletion of sensitive information
 - GDPR compliance (Art. 17 - Right to erasure)
+- Browser history and cache deletion
+- Email archive secure deletion
+- Personal documents cleanup
+
+**Browser History & Cache - Secure deletion:**
+```bash
+# Firefox
+sudo etdk ~/.mozilla/firefox/*.default-release/places.sqlite  # History
+sudo etdk ~/.cache/mozilla/firefox/                           # Cache
+
+# Chrome/Chromium
+sudo etdk ~/.config/google-chrome/Default/History
+sudo etdk ~/.cache/google-chrome/
+
+# Safari (macOS)
+sudo etdk ~/Library/Safari/History.db
+sudo etdk ~/Library/Caches/com.apple.Safari/
+```
+
+**Email Archive - Secure deletion:**
+```bash
+# Thunderbird
+sudo etdk ~/.thunderbird/*/Mail/                    # All emails
+sudo etdk ~/.thunderbird/*/ImapMail/
+
+# Apple Mail (macOS)
+sudo etdk ~/Library/Mail/V10/
+
+# Outlook (Linux with Wine)
+sudo etdk ~/.wine/drive_c/users/*/Application\ Data/Microsoft/Outlook/
+```
 
 **File Encryption - Selling laptop/PC:**
 ```bash
@@ -291,6 +328,8 @@ sudo etdk /dev/nvme0n1    # NVMe drive
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
+For technical details and build instructions, see [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md).
 
 ## License
 
