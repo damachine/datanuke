@@ -39,7 +39,7 @@ Encrypt => Trash => Gone
 
 Encrypts files or entire devices in-place with AES-256-CBC, displays the encryption key once, then permanently wipes the key from RAM. Without the key, the encrypted data is permanently irrecoverable!
 
-This implements the official [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://www.bsi.bund.de/) recommendation for secure data deletion:  This method provides reliable protection against unauthorized recovery — provided the key is actually deleted, not just marked as deleted.
+Implements the official [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://www.bsi.bund.de/) recommendation for secure data deletion:  This method provides reliable protection against unauthorized recovery — provided the key is actually deleted, not just marked as deleted.
 
 > *"Wenn Sie die Daten auf dem Datenträger oder Gerät verschlüsselt haben, reicht es aus, alle Schlüssel sicher zu löschen."*
 > 
