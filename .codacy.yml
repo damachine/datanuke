@@ -1,0 +1,10 @@
+---
+engines:
+  cppcheck:
+    enabled: true
+    exclude_paths:
+      - "build/**"
+      - "build-release/**"
+      - "tests/**"
+    exclude_patterns:
+      - "missingIncludeSystem"
