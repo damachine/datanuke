@@ -2,8 +2,6 @@
 
 **Makes data powerless**
 
-Encrypt → Trash → Gone
-
 BSI-compliant secure data deletion through encryption and key destruction.
 
 DataNuke implements the official [BSI (Bundesamt für Sicherheit in der Informationstechnik)](https://www.bsi.bund.de/) recommendation for secure data deletion: **Encrypt data with strong encryption (AES-256-CBC), then securely delete all keys**. This method provides reliable protection against unauthorized recovery — provided the key is actually deleted, not just marked as deleted.
@@ -34,6 +32,8 @@ DataNuke implements the official [BSI (Bundesamt für Sicherheit in der Informat
 ---
 
 ## What It Does
+
+Encrypt → Trash → Gone
 
 **Implements the BSI method: "Daten verschlüsseln und Schlüssel wegwerfen" - Encrypt data and throw away the key**
 
