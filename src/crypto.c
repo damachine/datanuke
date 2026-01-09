@@ -15,6 +15,31 @@
 // cppcheck-suppress-end missingIncludeSystem
 
 /**
+ * @brief Helper function to initialize EVP cipher context for encryption
+ *
+ * Creates and initializes an EVP cipher context with AES-256-CBC.
+ * This reduces code duplication between file and device encryption.
+ *
+ * @param ctx Pointer to crypto_context_t containing key and IV
+ * @return Pointer to initialized EVP_CIPHER_CTX, or NULL on failure
+ */
+static EVP_CIPHER_CTX *init_cipher_context(const crypto_context_t *ctx) {
+    EVP_CIPHER_CTX *cipher_ctx = EVP_CIPHER_CTX_new();
+    if (!cipher_ctx) {
+        fprintf(stderr, "Error creating cipher context\n");
+        return NULL;
+    }
+
+    if (EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_cbc(), NULL, ctx->key, ctx->iv) != 1) {
+        fprintf(stderr, "Error initializing encryption: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        EVP_CIPHER_CTX_free(cipher_ctx);
+        return NULL;
+    }
+
+    return cipher_ctx;
+}
+
+/**
  * @brief Initialize cryptographic context with random key and IV
  *
  * Generates a cryptographically secure 256-bit key and 128-bit IV
@@ -96,21 +121,8 @@ int crypto_encrypt_file(const char *input_path, const char *output_path, crypto_
         return ETDK_ERROR_IO;
     }
 
-    EVP_CIPHER_CTX *cipher_ctx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX *cipher_ctx = init_cipher_context(ctx);
     if (!cipher_ctx) {
-        fprintf(stderr, "Error creating cipher context\n");
-        fclose(input);
-        fclose(output);
-        return ETDK_ERROR_CRYPTO;
-    }
-
-    /* Initialize AES-256-CBC encryption
-     * CBC (Cipher Block Chaining) mode provides confidentiality.
-     * Each block depends on all previous blocks, preventing pattern analysis.
-     */
-    if (EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_cbc(), NULL, ctx->key, ctx->iv) != 1) {
-        fprintf(stderr, "Error initializing encryption: %s\n", ERR_error_string(ERR_get_error(), NULL));
-        EVP_CIPHER_CTX_free(cipher_ctx);
         fclose(input);
         fclose(output);
         return ETDK_ERROR_CRYPTO;
@@ -297,17 +309,8 @@ int crypto_encrypt_device(const char *device_path, crypto_context_t *ctx) {
         return ETDK_ERROR_IO;
     }
 
-    EVP_CIPHER_CTX *cipher_ctx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX *cipher_ctx = init_cipher_context(ctx);
     if (!cipher_ctx) {
-        fprintf(stderr, "Error creating cipher context\n");
-        fclose(device);
-        return ETDK_ERROR_CRYPTO;
-    }
-
-    // Initialize AES-256-CBC encryption
-    if (EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_cbc(), NULL, ctx->key, ctx->iv) != 1) {
-        fprintf(stderr, "Error initializing encryption: %s\n", ERR_error_string(ERR_get_error(), NULL));
-        EVP_CIPHER_CTX_free(cipher_ctx);
         fclose(device);
         return ETDK_ERROR_CRYPTO;
     }
