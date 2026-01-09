@@ -23,7 +23,7 @@ DataNuke implements the official [BSI (Bundesamt für Sicherheit in der Informat
 
 ---
 
-> [!WARNING]
+> [!CAUTION]
 > **READ AND UNDERSTAND THIS ENTIRE DOCUMENT BEFORE USING THIS TOOL!**
 >
 > This tool **permanently destroys data** by encrypting it and then securely deleting the encryption key. If you don't save the key when it's displayed, **your data is gone forever** - no recovery is possible, not even with data recovery services.
@@ -170,7 +170,7 @@ To complete secure deletion process:
 
 ### Example: Block Device Encryption
 
-> [!WARNING]
+> [!NOTE]
 > USE LIVE SYSTEM (boot from USB) when wiping OS drive!
 > Cannot wipe drive with running OS!
 
@@ -246,7 +246,7 @@ openssl enc -d -aes-256-cbc \
 > - **Store keys offline** (paper, secure external storage) if recovery is needed
 > - **For true secure deletion:** Don't save the key at all - just let it be destroyed
 
-> [!WARNING]
+> [!NOTE]
 > **Security Notes**
 >
 > - **File is encrypted in-place** - same filename, encrypted content
@@ -279,7 +279,7 @@ rm customer_data.csv invoices.pdf database.sqlite
 
 **Device Encryption - Wiping entire drive before sale/disposal:**
 
-> [!WARNING]
+> [!NOTE]
 > USE LIVE SYSTEM (boot from USB) when wiping OS drive!
 > Cannot wipe drive with running OS!
 
