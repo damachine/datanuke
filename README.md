@@ -3,7 +3,7 @@
 >
 > This tool **permanently destroys data** by encrypting it and then securely deleting the encryption key. If you don't save the key when it's displayed, **your data is gone forever** - no recovery is possible, not even with data recovery services.
 
-## VERY PRE-RELEASE VERSION, not suitable for production – for now
+## VERY PRE-RELEASE VERSION, not suitable for production – WIP ⚠️
 
 [![Platform: Linux](https://img.shields.io/badge/Platform-Linux-blue.svg)](https://www.linux.org/)
 [![Platform: macOS](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
